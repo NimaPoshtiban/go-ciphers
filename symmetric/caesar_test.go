@@ -4,7 +4,7 @@ import "testing"
 
 
 
-func TestEncrypt(t *testing.T){
+func TestEncryptCaesar(t *testing.T){
 	var exampleForEncryption Caesar = "23/AaBcbcZz12&"
 	s,_:= exampleForEncryption.Encrypt()
 	expectedResult := "23/DdEfefcC12&"
@@ -14,7 +14,7 @@ func TestEncrypt(t *testing.T){
 	}
 }
 
-func TestDecrypt(t *testing.T){
+func TestDecryptCaesar(t *testing.T){
 	var exampleForEncryption Caesar = "23/DdEfefcC12&"
 	s,_:= exampleForEncryption.Decrypt()
 	expectedResult := "23/AaBcbcZz12&"
