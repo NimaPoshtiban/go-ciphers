@@ -8,19 +8,15 @@ type Caesar string
 
 // Encrypt encrypts the text using caesar algorithm
 func (c Caesar) Encrypt()(string,error){
-	if len(string(c)) > 255{
-		return "",errors.New("string is too large")
-	}
+    
 	hash := make([]rune,len(string(c)))
 	for k,v := range c {
-		if v >= 65 && v < 88 || (v >=97 && v < 120){
-			hash[k] = v+3
-		}else if v >= 120 && v <123 {
-			hash[k] = v - 55
-		}else if v >=88 && v <=90{
-			hash[k] = v + 9
-		}else{
-			hash[k] = v
+		if v >= 65 && v < 68 { // for A-C
+			hash[k] = v+23
+		} else if v >= 97 && v < 100 { // for a-c
+			hash[k] = v+23
+		} else {
+			hash[k] = v + 3
 		}
 	}
 	return string(hash),nil
@@ -28,19 +24,15 @@ func (c Caesar) Encrypt()(string,error){
 
 // Decrypt decrypts the text using caesar algorithm
 func (c Caesar) Decrypt()(string,error){
-	if len(string(c)) > 255{
-		return "",errors.New("string is too large")
-	}
+    
 	hash := make([]rune,len(string(c)))
 	for k,v := range c{
-		if v >= 68 && v <= 90 || (v <123 && v >= 100){
-			hash[k] = v-3
-		}else if v < 68 && v >= 65{
-			hash[k] = v + 55
-		}else if v <100 && v >= 97{
-			hash[k] = v -9
-		}else {
-			hash[k]=v
+		if v > 87 && v <= 90 { // for X-Z
+			hash[k] = v-23
+		} else if v > 119 && v <= 122 { // for x-z
+			hash[k] = v-23
+		} else {
+			hash[k] = v - 3
 		}
 	}
 	return string(hash),nil
