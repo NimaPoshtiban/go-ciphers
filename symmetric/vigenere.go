@@ -17,45 +17,42 @@ func (v Vigenere) Encrypt(key string) (string, error) {
 	}
 	key = v.generateKey(key)
 	var cipherText strings.Builder
-	for i:=0;i<len(v);i++ {
-		x := (v[i] + key[i]) % 26
-		x += 'A'
-		// cipherText +=string(x)
-		cipherText.WriteString(string(x))
+	for i := 0; i < len(v); i++ {
+		plaintext := int(v[i] - 'A')
+		key := int(key[i] - 'A')
+		cipher := (plaintext + key) % 26
+		cipher += 'A'
+		cipherText.WriteString(string(cipher))
 	}
-	return cipherText.String(),nil
+	return cipherText.String(), nil
 }
 
 
 // Decrypt decrypts the encrypted text 
 // and returns the original text
-func (v Vigenere) Decrypt(key string)(string,error){
+func (v Vigenere) Decrypt(key string) (string, error) {
 	if len(string(v)) > 255 {
 		return "", errors.New("string is too large")
 	}
 	key = v.generateKey(key)
-	var originalText strings.Builder 
-	for i := 0; i < len(v)&&i<len(key); i++ {
-		x:=(v[i] - key[i]+26) % 26
-		x += 'A'
-		// originalText += string(x)
-		originalText.WriteString(string(x))
+	var plaintext strings.Builder
+	for i := 0; i < len(v); i++ {
+		cipher := int(v[i] - 'A')
+		key := int(key[i] - 'A')
+		plain := (cipher - key + 26) % 26
+		plain += 'A'
+		plaintext.WriteString(string(plain))
 	}
-	return originalText.String(),nil
+	return plaintext.String(), nil
 }
+
 // generateKey function generates the key in
 // a cyclic manner until it's length is
 // equal to the length of original text
-func (v Vigenere) generateKey(key string) string{
-	x := len(key)
-	for i:=0;;i++{
-		if x==i{
-			i = 0
-		}
-		if len(key)==len(v){
-			break
-		}
-		key +=(string(key[i]))
-	}
-	return key
+func (v Vigenere) generateKey(key string) string {
+    var genKey strings.Builder
+    for i := 0; i < len(v); i++ {
+        genKey.WriteString(string(key[i%len(key)]))
+    }
+    return genKey.String()
 }
