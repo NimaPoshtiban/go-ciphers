@@ -1,4 +1,3 @@
-//TODO: edit this test
 package symmetric
 
 import (
