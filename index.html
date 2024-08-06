@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.3/dist/semantic.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.3/dist/semantic.min.js"></script>
+
+  <title>GO-Ciphers</title>
+</head>
+
+<body>
+  <div class="ui container" style="margin-top: 3em;">
+    <div class="ui inverted menu">
+      <a class="active red item">Ceasar</a>
+      <a class="orange item">Vigenere</a>
+      <a class="yellow item">OTP</a>
+      <a class="olive item">NonUniformEntropy</a>
+      <a class="green item">UniformEntropy</a>
+    </div>
+    <br>
+    <div class="ui item">
+      <div class="ui form">
+        <div class="field">
+          <div class="ui input">
+            <textarea type="text" placeholder="Key" id="c">
+            </textarea>
+
+            <button class="ui button primary" type="submit">
+              Cipher
+            </button>
+
+            <button class="ui button red" type="submit">
+              Decipher
+            </button>
+
+          </div>
+        </div>
+        <div class="ui item">
+          <div class="ui form">
+            <div class="field">
+              <div class="ui input">
+                <textarea type="text" placeholder="Result" id="d">
+                </textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </div>
+  <script>
+    
+  </script>
+</body>
+
+</html>
