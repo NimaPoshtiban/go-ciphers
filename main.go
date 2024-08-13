@@ -1,105 +1,97 @@
 package main
 
 import (
-	"fmt"
-	"net/http"
-	"os"
-	"strconv"
-	"strings"
+	"context"
+	"log"
+	"net"
 
-	"github.com/nimaposhtiban/go-ciphers/randomness"
+	"github.com/nimaposhtiban/go-ciphers/pb"
 	"github.com/nimaposhtiban/go-ciphers/symmetric"
+	"google.golang.org/grpc"
+	"google.golang.org/protobuf/proto"
 )
 
-func ceasar(w http.ResponseWriter, r *http.Request) {
-	values := r.URL.Query()
-	action := values.Get("action")
-	text := values.Get("text")
-	w.Header().Add("Content-Type", "text/plain")
-	w.WriteHeader(200)
-	var ceasar symmetric.Caesar = symmetric.Caesar(text)
-	if action == "cipher" {
-		text, _ = ceasar.Encrypt()
-	}
-	if action == "decipher" {
-		text, _ = ceasar.Decrypt()
-	}
-	fmt.Println(text + "\n" + action)
-
-	fmt.Fprintln(w, string(text))
+type CipherGuideServer struct {
+	pb.UnimplementedCipherServer
 }
 
-func vigenere(w http.ResponseWriter, r *http.Request) {
-	values := r.URL.Query()
-	text := values.Get("text")
-	key := values.Get("key")
-	action := values.Get("action")
-	var vigenere symmetric.Vigenere = symmetric.Vigenere(text)
-	if action == "cipher" {
-		text, _ = vigenere.Encrypt(key)
-	}
-	if action == "decipher" {
-		text, _ = vigenere.Decrypt(key)
-	}
-	fmt.Println("Vigener !!")
-	fmt.Fprintln(w, string(text))
-}
+func (c *CipherGuideServer) proccess(ctx context.Context, in *pb.CipherRequest) (*pb.CipherResponse, error) {
+	if in.Cipher {
+		if in.Text == "" {
+			return nil, proto.Error
+		}
+		switch in.Type {
+		case pb.CipherRequest_CEASAR:
+			var c symmetric.Caesar
+			c = symmetric.Caesar(in.Text)
+			result, _ := c.Encrypt()
+			return &pb.CipherResponse{Text: result}, nil
+		case pb.CipherRequest_VIGENERE:
+			if in.Key == nil {
+				return nil, proto.Error
+			}
+			var v symmetric.Vigenere
+			v = symmetric.Vigenere(in.Text)
+			result, _ := v.Encrypt(*in.Key)
+			return &pb.CipherResponse{Text: result}, nil
+		case pb.CipherRequest_OTP:
+			if in.Key == nil {
+				return nil, proto.Error
+			}
+			var o symmetric.OneTimePad
+			o.Key = *in.Key
+			o.PlainText = in.Text
+			result := o.Encrypt()
+			return &pb.CipherResponse{Text: result}, nil
+		default:
+			return nil, proto.Error
+		}
 
-func otp(w http.ResponseWriter, r *http.Request) {
-	values := r.URL.Query()
-	text := values.Get("text")
-	key := values.Get("key")
-	action := values.Get("action")
-	var otp_ symmetric.OneTimePad = symmetric.OneTimePad{}
-	otp_.Key = key
-	if action == "cipher" {
-		otp_.PlainText = text
-		text = otp_.Encrypt()
+	} else {
+		if in.Text == "" {
+			return nil, proto.Error
+		}
+		switch in.Type {
+		case pb.CipherRequest_CEASAR:
+			var c symmetric.Caesar
+			c = symmetric.Caesar(in.Text)
+			result, _ := c.Decrypt()
+			return &pb.CipherResponse{Text: result}, nil
+		case pb.CipherRequest_VIGENERE:
+			if in.Key == nil {
+				return nil, proto.Error
+			}
+			var v symmetric.Vigenere
+			v = symmetric.Vigenere(in.Text)
+			result, _ := v.Decrypt(*in.Key)
+			return &pb.CipherResponse{Text: result}, nil
+		case pb.CipherRequest_OTP:
+			if in.Key == nil {
+				return nil, proto.Error
+			}
+			var o symmetric.OneTimePad
+			o.Key = *in.Key
+			o.Hash = in.Text
+			result := o.Decrypt()
+			return &pb.CipherResponse{Text: result}, nil
+		default:
+			return nil, proto.Error
+		}
 	}
-	if action == "decipher" {
-		otp_.Hash = text
-		text = otp_.Decrypt()
-	}
-	fmt.Println("Vigener !!")
-	fmt.Fprintln(w, string(text))
 }
-
-func NonUniformEntropy(w http.ResponseWriter, r *http.Request) {
-	values := r.URL.Query()
-	text := values.Get("text")
-	numbers := strings.Split(text, ",")
-	nums := make([]float64, 0)
-	for _, num := range numbers {
-		n, _ := strconv.ParseFloat(num, 64)
-		nums = append(nums, n)
-	}
-	result := randomness.CalculateNonUniformEntropy(nums...)
-	fmt.Fprintln(w, result)
-}
-
-func UniformEntropy(w http.ResponseWriter, r *http.Request) {
-	values := r.URL.Query()
-	text := values.Get("text")
-	probabilityStr := values.Get("key")
-	probability, _ := strconv.ParseFloat(probabilityStr, 64)
-	occurrence, _ := strconv.ParseInt(text, 10, 64)
-	result := randomness.CalculateUniformEntropy(probability, int(occurrence))
-	fmt.Fprintln(w, result)
-}
-
-func homepage(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Content-Type", "text/html")
-	w.WriteHeader(200)
-	page, _ := os.ReadFile("index.html")
-	w.Write(page)
+func newServer() *CipherGuideServer {
+	s := &CipherGuideServer{}
+	return s
 }
 
 func main() {
-	http.HandleFunc("/uniformentropy", UniformEntropy)
-	http.HandleFunc("/nonuniformentropy", NonUniformEntropy)
-	http.HandleFunc("/otp", otp)
-	http.HandleFunc("/vigenere", vigenere)
-	http.HandleFunc("/ceasar", ceasar)
-	http.HandleFunc("/", homepage)
-	http.ListenAndServe(":12345", nil)
+	li, err := net.Listen("tcp", "localhost:7042")
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
+	var opt []grpc.ServerOption
+
+	grpcServer := grpc.NewServer(opt...)
+	pb.RegisterCipherServer(grpcServer, newServer())
+	grpcServer.Serve(li)
 }

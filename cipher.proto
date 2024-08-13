@@ -1,0 +1,24 @@
+﻿syntax = "proto3";
+
+option go_package = "github.com/nimaposhtiban/go-ciphers/pb";
+
+message CipherRequest{
+	bool cipher = 1;
+	optional string key = 2;
+	string text = 3;
+	enum cipherType{
+		UNKNOWN = 0;
+		CEASAR = 1;
+		VIGENERE = 2;
+		OTP = 3;
+	}
+	cipherType type = 4;
+}
+
+message CipherResponse{
+	string text = 1;
+}
+
+service Cipher {
+	rpc proccess(CipherRequest) returns (CipherResponse);
+}
